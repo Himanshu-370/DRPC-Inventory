@@ -88,8 +88,25 @@ public class InventoryManagementController {
     }
 
     @PostMapping("/library-categories/{id}/library-products/{productId}/product-components")
-    public ResponseEntity<Void> addProductComponentToLibraryProduct(@PathVariable String id,
-            @PathVariable String productId, @RequestBody ProductComponent component) {
+    public ResponseEntity<Void> addProductComponentToLibraryProduct(
+            @PathVariable String id,
+            @PathVariable String productId,
+            @RequestBody ProductComponent component) {
+
+        // Link raw material by matching productComponentName with
+        // rawMaterialProductName
+        List<RawMaterial> rawMaterials = genericService.findAll(RawMaterial.class);
+        for (RawMaterial rawMaterial : rawMaterials) {
+            if (rawMaterial.getRawMaterialProductName().equalsIgnoreCase(component.getProductComponentName())) {
+                component.setRawMaterialId(rawMaterial.getId());
+                component.setProductComponentPricePerKg(rawMaterial.getRawMaterialProductPricePerKg());
+                component.setProductComponentNetPrice(
+                        component.getProductComponentQuantity() * rawMaterial.getRawMaterialProductPricePerKg());
+                break;
+            }
+        }
+
+        // Fetch and update the LibraryProduct
         LibraryCategory category = genericService.getById(id, LibraryCategory.class).getBody();
         if (category == null) {
             throw new RuntimeException("LibraryCategory not found with id: " + id);
@@ -197,7 +214,25 @@ public class InventoryManagementController {
     @PutMapping("/raw-materials/{id}")
     public ResponseEntity<RawMaterial> updateRawMaterial(@PathVariable String id,
             @RequestBody RawMaterial rawMaterial) {
-        return ResponseEntity.ok(genericService.update(id, rawMaterial, RawMaterial.class));
+        RawMaterial updatedRawMaterial = genericService.update(id, rawMaterial, RawMaterial.class);
+
+        // Update associated ProductComponents
+        List<LibraryCategory> categories = genericService.findAll(LibraryCategory.class);
+        for (LibraryCategory category : categories) {
+            for (LibraryProduct product : category.getLibraryProducts()) {
+                for (ProductComponent component : product.getProductComponents()) {
+                    if (id.equals(component.getRawMaterialId())) {
+                        component.setProductComponentPricePerKg(rawMaterial.getRawMaterialProductPricePerKg());
+                        component.setProductComponentNetPrice(
+                                component.getProductComponentQuantity()
+                                        * rawMaterial.getRawMaterialProductPricePerKg());
+                    }
+                }
+                genericService.update(category.getId(), category, LibraryCategory.class);
+            }
+        }
+
+        return ResponseEntity.ok(updatedRawMaterial);
     }
 
     @DeleteMapping("/raw-materials/{id}")

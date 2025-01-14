@@ -13,6 +13,7 @@ public class ProductComponent {
     private double ProductComponentQuantity;
     private double ProductComponentPricePerKg;
     private double ProductComponentNetPrice;
+    private String rawMaterialId;
 
     public ProductComponent() {
         this.id = UUID.randomUUID().toString();
@@ -56,5 +57,13 @@ public class ProductComponent {
 
     public void setProductComponentNetPrice(double ProductComponentNetPrice) {
         this.ProductComponentNetPrice = ProductComponentNetPrice;
+    }
+
+    public String getRawMaterialId() {
+        return rawMaterialId;
+    }
+
+    public void setRawMaterialId(String rawMaterialId) {
+        this.rawMaterialId = rawMaterialId;
     }
 }
