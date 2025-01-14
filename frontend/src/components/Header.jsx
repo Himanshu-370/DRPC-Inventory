@@ -1,34 +1,25 @@
 import { Link } from "react-router-dom";
 
-const Header = () => {
-  return (
-    <header className="bg-blue-600 text-white p-4">
-      <div className="container mx-auto flex justify-between items-center">
-        <h1 className="text-lg font-bold">
-          <Link to="/">Inventory Management</Link>
-        </h1>
-        <nav>
-          <ul className="flex space-x-4">
-            <li>
-              <Link to="/" className="hover:underline">
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/library-categories" className="hover:underline">
-                Categories
-              </Link>
-            </li>
-            <li>
-              <Link to="/raw-materials" className="hover:underline">
-                Raw Materials
-              </Link>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </header>
-  );
-};
+const Header = () => (
+  <header className="bg-blue-500 text-white p-4">
+    <div className="container mx-auto flex justify-between">
+      <h1 className="text-lg font-bold">Inventory Management</h1>
+      <nav>
+        <Link to="/" className="px-2">
+          Dashboard
+        </Link>
+        <Link to="/library-categories" className="px-2">
+          Library
+        </Link>
+        <Link to="/raw-materials" className="px-2">
+          Raw Materials
+        </Link>
+        <Link to="/price-history" className="px-2">
+          Price History
+        </Link>
+      </nav>
+    </div>
+  </header>
+);
 
 export default Header;

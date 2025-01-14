@@ -6,7 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import io.github.cdimascio.dotenv.Dotenv;
+import main.java.com.example.InventoryManagement.model.RawMaterialPriceHistory;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -214,7 +216,11 @@ public class InventoryManagementController {
     @PutMapping("/raw-materials/{id}")
     public ResponseEntity<RawMaterial> updateRawMaterial(@PathVariable String id,
             @RequestBody RawMaterial rawMaterial) {
-        RawMaterial updatedRawMaterial = genericService.update(id, rawMaterial, RawMaterial.class);
+        ResponseEntity<RawMaterial> rawMaterialResponse = genericService.getById(id, RawMaterial.class);
+        if (rawMaterialResponse.getBody() == null) {
+            throw new RuntimeException("RawMaterial not found with id: " + id);
+        }
+        RawMaterial existingRawMaterial = rawMaterialResponse.getBody();
 
         // Update associated ProductComponents
         List<LibraryCategory> categories = genericService.findAll(LibraryCategory.class);
@@ -232,12 +238,47 @@ public class InventoryManagementController {
             }
         }
 
+        // Update price history if the price has changed
+        if (existingRawMaterial.getRawMaterialProductPricePerKg() != rawMaterial.getRawMaterialProductPricePerKg()) {
+            RawMaterialPriceHistory history = genericService.findAll(RawMaterialPriceHistory.class).stream()
+                    .filter(h -> h.getRawMaterialId().equals(id))
+                    .findFirst()
+                    .orElse(new RawMaterialPriceHistory());
+
+            history.setRawMaterialId(id);
+            history.setRawMaterialProductName(rawMaterial.getRawMaterialProductName());
+            history.setCurrentPrice(rawMaterial.getRawMaterialProductPricePerKg());
+
+            history.getPriceHistory().add(
+                    new RawMaterialPriceHistory.PriceRecord(
+                            existingRawMaterial.getRawMaterialProductPricePerKg(), LocalDateTime.now()));
+
+            genericService.save(history);
+        }
+
+        // Update the raw material
+        RawMaterial updatedRawMaterial = genericService.update(id, rawMaterial, RawMaterial.class);
         return ResponseEntity.ok(updatedRawMaterial);
     }
 
     @DeleteMapping("/raw-materials/{id}")
     public ResponseEntity<Void> deleteRawMaterial(@PathVariable String id) {
         return genericService.delete(id, RawMaterial.class);
+    }
+
+    @GetMapping("/raw-materials/price-history")
+    public ResponseEntity<List<RawMaterialPriceHistory>> getAllRawMaterialPriceHistory() {
+        List<RawMaterialPriceHistory> histories = genericService.findAll(RawMaterialPriceHistory.class);
+        return ResponseEntity.ok(histories);
+    }
+
+    @GetMapping("/raw-materials/{id}/price-history")
+    public ResponseEntity<RawMaterialPriceHistory> getRawMaterialPriceHistory(@PathVariable String id) {
+        RawMaterialPriceHistory history = genericService.findAll(RawMaterialPriceHistory.class).stream()
+                .filter(h -> h.getRawMaterialId().equals(id))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Price history not found for RawMaterial with id: " + id));
+        return ResponseEntity.ok(history);
     }
 
     // --- APIs not used in the frontend ---

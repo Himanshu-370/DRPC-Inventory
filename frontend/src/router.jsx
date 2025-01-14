@@ -5,6 +5,7 @@ import Product from "./pages/Product";
 import Component from "./pages/Component";
 import RawMaterials from "./pages/RawMaterials";
 import NotFound from "./pages/NotFound";
+import PriceHistory from "./pages/PriceHistory";
 
 const AppRouter = () => (
   <Router>
@@ -20,6 +21,7 @@ const AppRouter = () => (
         element={<Component />}
       />
       <Route path="/raw-materials" element={<RawMaterials />} />
+      <Route path="/price-history" element={<PriceHistory />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Router>

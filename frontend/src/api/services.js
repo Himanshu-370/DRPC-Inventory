@@ -206,3 +206,12 @@ export const deleteRawMaterial = async (id) => {
     handleApiError(error);
   }
 };
+
+export const getPriceHistory = async () => {
+  try {
+    const response = await api.get("/raw-materials/price-history");
+    return response.data;
+  } catch (error) {
+    handleApiError(error);
+  }
+};
